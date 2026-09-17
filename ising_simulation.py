@@ -6,7 +6,7 @@ Created on Fri Dec  1 14:46:13 2023
 @author: michele_mac
 """
 import math
-import matplotlib.pyplot as plt
+from plotter import plot_lattice, plot_magnetization
 import numpy as np
 import tomllib
 from pathlib import Path
@@ -195,28 +195,9 @@ def run_simulation(
     )
 
 
-def plot_magnetization(sampled_cycles, magnetization_history):
-    """Plot magnetization as a function of Monte Carlo sweeps."""
-    plt.plot(sampled_cycles, magnetization_history)
-    plt.xlabel("Monte Carlo sweep")
-    plt.ylabel("Magnetization per site")
-    plt.title("Magnetization evolution")
-    plt.show()
 
 
-def plot_lattice(lattice):
-    """Plot the spin configuration of the lattice."""
-    plt.imshow(
-        lattice,
-        cmap="coolwarm",
-        vmin=-1,
-        vmax=1,
-        interpolation="nearest",
-    )
 
-    plt.title("Final spin configuration")
-    plt.axis("off")
-    plt.show()
 
 
 if __name__ == "__main__":

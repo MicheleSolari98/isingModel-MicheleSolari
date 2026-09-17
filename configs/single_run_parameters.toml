@@ -1,7 +1,7 @@
 [physics]
 lattice_size = 30
 coupling = 1.0
-temperature = 2.3
+temperature = 2.0
 
 [simulation]
 equilibration_cycles = 600
