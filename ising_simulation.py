@@ -6,7 +6,6 @@ Created on Fri Dec  1 14:46:13 2023
 @author: michele_mac
 """
 import math
-import tkinter as tk
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -104,50 +103,19 @@ def plot_magnetization(magnetization_history):
     plt.show()
 
 
-def draw_lattice(lattice):
-    """Display the spin lattice using Tkinter."""
-    size = lattice.shape[0]
-
-    cell_width = 10
-    margin = 20
-
-    window_size = 2 * margin + size * cell_width
-
-    root = tk.Tk()
-    root.title("2D Ising model")
-
-    canvas = tk.Canvas(
-        root,
-        width=window_size,
-        height=window_size,
-        bg="white",
+def plot_lattice(lattice):
+    """Plot the spin configuration of the lattice."""
+    plt.imshow(
+        lattice,
+        cmap="coolwarm",
+        vmin=-1,
+        vmax=1,
+        interpolation="nearest",
     )
-    canvas.pack()
 
-    for row in range(size):
-        for col in range(size):
-            spin = lattice[row, col]
-
-            if spin == 1:
-                color = "purple"
-            else:
-                color = "orange"
-
-            x0 = margin + col * cell_width
-            y0 = margin + row * cell_width
-            x1 = x0 + cell_width
-            y1 = y0 + cell_width
-
-            canvas.create_rectangle(
-                x0,
-                y0,
-                x1,
-                y1,
-                fill=color,
-                outline=color,
-            )
-
-    root.mainloop()
+    plt.title("Final spin configuration")
+    plt.axis("off")
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -175,5 +143,5 @@ if __name__ == "__main__":
 
     # Simple visual checks
     plot_magnetization(magnetization_history)
-    draw_lattice(final_lattice)
+    plot_lattice(final_lattice)
 
