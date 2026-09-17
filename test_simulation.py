@@ -7,9 +7,13 @@ Created on Thu Sep 17 17:56:51 2026
 """
 
 import numpy as np
+from pathlib import Path
+import pytest
 
 from ising_simulation import (
     create_lattice,
+    load_config,
+    validate_config,
     magnetization,
     spin_flip_energy,
     run_simulation,
@@ -50,6 +54,124 @@ def test_flip_energy_aligned_spin():
     assert np.isclose(delta_energy, 8.0)
 
 
+
+def test_load_config(tmp_path):
+    """A TOML configuration file should be loaded correctly."""
+    config_file = tmp_path / "config.toml"
+
+    config_file.write_text(
+        """
+[physics]
+lattice_size = 30
+coupling = 1.0
+temperature = 2.3
+"""
+    )
+
+    config = load_config(config_file)
+
+    assert config["physics"]["lattice_size"] == 30
+    assert np.isclose(config["physics"]["coupling"], 1.0)
+    assert np.isclose(config["physics"]["temperature"], 2.3)
+
+
+def test_validate_config_rejects_invalid_parameters():
+    """Invalid simulation parameters should raise a ValueError."""
+    invalid_configs = [
+        {
+            "physics": {
+                "lattice_size": 13.7,
+                "coupling": 1.0,
+                "temperature": 2.3,
+            },
+            "simulation": {
+                "equilibration_cycles": 100,
+                "measurement_cycles": 500,
+                "seed": 42,
+            },
+            "output": {
+                "record_time_series": True,
+                "sample_every": 1,
+            },
+        },
+        {
+            "physics": {
+                "lattice_size": 30,
+                "coupling": 1.0,
+                "temperature": -1.0,
+            },
+            "simulation": {
+                "equilibration_cycles": 100,
+                "measurement_cycles": 500,
+                "seed": 42,
+            },
+            "output": {
+                "record_time_series": True,
+                "sample_every": 1,
+            },
+        },
+        {
+            "physics": {
+                "lattice_size": 30,
+                "coupling": 1.0,
+                "temperature": 2.3,
+            },
+            "simulation": {
+                "equilibration_cycles": -10,
+                "measurement_cycles": 500,
+                "seed": 42,
+            },
+            "output": {
+                "record_time_series": True,
+                "sample_every": 1,
+            },
+        },
+        {
+            "physics": {
+                "lattice_size": 30,
+                "coupling": 1.0,
+                "temperature": 2.3,
+            },
+            "simulation": {
+                "equilibration_cycles": 100,
+                "measurement_cycles": 500,
+                "seed": 42,
+            },
+            "output": {
+                "record_time_series": True,
+                "sample_every": 0,
+            },
+        },
+    ]
+
+    for config in invalid_configs:
+        with pytest.raises(ValueError):
+            validate_config(config)
+
+
+
+def test_simulation_sampling_cycles():
+    """Time-series samples should be recorded at the requested cycle interval."""
+    rng = np.random.default_rng(42)
+    lattice = create_lattice(4, rng)
+
+    final_lattice, sampled_cycles, magnetization_history = run_simulation(
+        lattice=lattice,
+        temperature=2.0,
+        coupling=1.0,
+        equilibration_cycles=2,
+        measurement_cycles=3,
+        rng=rng,
+        record_time_series=True,
+        sample_every=2,
+    )
+
+    assert np.array_equal(sampled_cycles, [0, 2, 4])
+    assert len(magnetization_history) == len(sampled_cycles)
+
+
+
+
 def test_simulation_is_reproducible():
     """Equal seeds and parameters should produce equal simulations."""
     rng_1 = np.random.default_rng(42)
@@ -58,12 +180,28 @@ def test_simulation_is_reproducible():
     lattice_1 = create_lattice(5, rng_1)
     lattice_2 = create_lattice(5, rng_2)
 
-    final_1, magnetization_1 = run_simulation(
-        lattice_1, 2.0, 1.0, 10, rng_1
+    final_1, cycles_1, magnetization_1 = run_simulation(
+        lattice=lattice_1,
+        temperature=2.0,
+        coupling=1.0,
+        equilibration_cycles=2,
+        measurement_cycles=5,
+        rng=rng_1,
+        record_time_series=True,
+        sample_every=1,
     )
-    final_2, magnetization_2 = run_simulation(
-        lattice_2, 2.0, 1.0, 10, rng_2
+
+    final_2, cycles_2, magnetization_2 = run_simulation(
+        lattice=lattice_2,
+        temperature=2.0,
+        coupling=1.0,
+        equilibration_cycles=2,
+        measurement_cycles=5,
+        rng=rng_2,
+        record_time_series=True,
+        sample_every=1,
     )
 
     assert np.array_equal(final_1, final_2)
+    assert np.array_equal(cycles_1, cycles_2)
     assert np.array_equal(magnetization_1, magnetization_2)
