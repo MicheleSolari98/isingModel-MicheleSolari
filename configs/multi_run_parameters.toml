@@ -1,0 +1,20 @@
+[physics]
+lattice_size = 30
+coupling = 1.0
+
+[simulation]
+equilibration_cycles = 600
+measurement_cycles = 600
+measurement_every = 20
+seed = 24
+repetitions = 3
+
+[temperature_sweep]
+start = 1.0
+stop = 3.5
+points = 26
+include_critical_temperature = true
+
+[output]
+record_time_series = false
+sample_every = 1
