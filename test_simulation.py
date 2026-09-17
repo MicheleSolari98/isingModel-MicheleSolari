@@ -159,7 +159,7 @@ def test_simulation_sampling_cycles():
     rng = np.random.default_rng(42)
     lattice = create_lattice(4, rng)
 
-    final_lattice, sampled_cycles, magnetization_history = run_simulation(
+    final_lattice, sampled_cycles, magnetization_history, magnetization_measurements = run_simulation(
         lattice=lattice,
         temperature=2.0,
         coupling=1.0,
@@ -184,7 +184,7 @@ def test_simulation_is_reproducible():
     lattice_1 = create_lattice(5, rng_1)
     lattice_2 = create_lattice(5, rng_2)
 
-    final_1, cycles_1, magnetization_1 = run_simulation(
+    final_1, cycles_1, magnetization_1, magnetization_meas1 = run_simulation(
         lattice=lattice_1,
         temperature=2.0,
         coupling=1.0,
@@ -195,7 +195,7 @@ def test_simulation_is_reproducible():
         sample_every=1,
     )
 
-    final_2, cycles_2, magnetization_2 = run_simulation(
+    final_2, cycles_2, magnetization_2, magnetization_meas2 = run_simulation(
         lattice=lattice_2,
         temperature=2.0,
         coupling=1.0,
@@ -209,3 +209,33 @@ def test_simulation_is_reproducible():
     assert np.array_equal(final_1, final_2)
     assert np.array_equal(cycles_1, cycles_2)
     assert np.array_equal(magnetization_1, magnetization_2)
+    
+    
+    
+    
+def test_measurement_sampling():
+    """Magnetization should be sampled only at the requested measurement interval."""
+    rng = np.random.default_rng(42)
+    lattice = create_lattice(4, rng)
+
+    (
+        final_lattice,
+        sampled_cycles,
+        magnetization_history,
+        magnetization_measurements,
+    ) = run_simulation(
+        lattice=lattice,
+        temperature=2.0,
+        coupling=1.0,
+        equilibration_cycles=2,
+        measurement_cycles=10,
+        rng=rng,
+        record_time_series=False,
+        sample_every=1,
+        measurement_every=2,
+    )
+
+    assert len(magnetization_measurements) == 5
+    
+    
+    

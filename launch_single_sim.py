@@ -127,6 +127,7 @@ if __name__ == "__main__":
         final_lattice,
         sampled_cycles,
         magnetization_history,
+        magnetization_measurements,
     ) = run_simulation(
         lattice=lattice,
         temperature=temperature,

@@ -76,6 +76,7 @@ def run_simulation(
     rng,
     record_time_series,
     sample_every,
+    measurement_every=None,
 ):
     """
     Run the Ising simulation.
@@ -86,6 +87,7 @@ def run_simulation(
     """
     sampled_cycles = []
     magnetization_history = []
+    magnetization_measurements = []
 
     if record_time_series:
         sampled_cycles.append(0)
@@ -118,11 +120,17 @@ def run_simulation(
         if record_time_series and current_cycle % sample_every == 0:
             sampled_cycles.append(current_cycle)
             magnetization_history.append(magnetization(lattice))
+        if (
+            measurement_every is not None
+            and i % measurement_every == 0
+        ):
+            magnetization_measurements.append(magnetization(lattice))
 
     return (
         lattice,
         np.array(sampled_cycles),
         np.array(magnetization_history),
+        np.array(magnetization_measurements),
     )
 
 
