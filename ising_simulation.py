@@ -5,209 +5,175 @@ Created on Fri Dec  1 14:46:13 2023
 
 @author: michele_mac
 """
-import matplotlib.pyplot as plt
-import numpy as np
 import math
 import tkinter as tk
-import random
-from scipy.optimize import curve_fit
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 
-def Tc_finder(magna_medi_T, T_step, T_i):
-    for i in range(len(magna_medi_T)-2):
-        if magna_medi_T[i+2]+magna_medi_T[i]-2*magna_medi_T[i+1]>0.05 and T_i+i*T_step>1:
-           return T_i+(1+i)*T_step
-    return "buuu"
-    
-
-def Onsa_fit(T):
-    if T<2.269:
-       return (1-(math.sinh(2/T))**(-4))**(1/8)
-    return 0
-    
-
-def E_per_site(pg,J):
-    energy_mat=-J*(np.roll(pg,1,0)+np.roll(pg,-1,0)+np.roll(pg,1,1)+np.roll(pg,-1,1))
-    E_flatt=np.ravel(energy_mat)*np.ravel(pg)
-    return np.average(E_flatt)
-
-def total_E(pg,J):
-    energy_mat=-J*(np.roll(pg,1,0)+np.roll(pg,-1,0)+np.roll(pg,1,1)+np.roll(pg,-1,1))
-    E_flatt=np.ravel(energy_mat)*np.ravel(pg)
-    return np.sum(E_flatt)
-
-def mean_magnetization_per_site(t_eq, L, record):
-    
-    data=record[::3*(L**2)]
-    return abs(np.average(record))
+def create_lattice(size, rng):
+    """Create a square lattice with randomly oriented spins (+1 or -1)."""
+    return rng.choice([-1, 1], size=(size, size))
 
 
-
-def pittura (pg, L,C):
-    
-    wid=10
-    x0=100
-    y0=10
-    a=x0, y0
-    b=x0+wid, y0
-    c=x0+wid, y0+wid
-    d=x0, y0+wid
-    sh=a,b,c,d
-    col=["orange","","purple"]
-    for i in range(L):
-        for j in range(L):
-            site_c=col[pg[i,j]+1]
-            
-            x0+=wid
-            a=x0, y0
-            b=x0+wid, y0
-            c=x0+wid, y0+wid
-            d=x0, y0+wid
-            sh=a,b,c,d
-            C.create_polygon(sh, fill=site_c)
-        y0+=wid
-        x0=100
-        
-        
-#create the matrix of spin configurations
-def create_play_ground(L):
-    pg=np.random.randint(0,2,size=(L,L))*2-1
-    return pg
+def magnetization(lattice):
+    """Return the mean magnetization per lattice site."""
+    return np.mean(lattice)
 
 
-#calculate energy of flip, site is the list with pos in the matrix
-def site_flip_energy(site,pg,J,L):
-    y=site[0]
-    x=site[1]
-    flipped=-pg[y,x]
-    
-    #each site interacts with its neighbors, first column interacts with last column, 
-    #same for rows, so the matrix it's like the surface of a toroid
-    
-    E_f=-J*(pg[y,x-1]+pg[y,(x+1)%L]+pg[y-1,x]+pg[(y+1)%L,x])*flipped
-    E_0=-J*(pg[y,x-1]+pg[y,(x+1)%L]+pg[y-1,x]+pg[(y+1)%L,x])*pg[y,x]
-    return E_f-E_0
+def spin_flip_energy(lattice, row, col, coupling):
+    """Calculate the energy change caused by flipping one spin."""
+    size = lattice.shape[0]
+    spin = lattice[row, col]
+
+    neighbors = (
+        lattice[(row - 1) % size, col]
+        + lattice[(row + 1) % size, col]
+        + lattice[row, (col - 1) % size]
+        + lattice[row, (col + 1) % size]
+    )
+
+    return 2 * coupling * spin * neighbors
 
 
+def metropolis_step(lattice, temperature, coupling, rng):
+    """Attempt one spin flip according to the Metropolis algorithm."""
+    size = lattice.shape[0]
 
-#function that flips the spin of a site, decision made with metropolis algorithm
-def flip(site, pg,J,L, T):
-    d_E=site_flip_energy(site, pg, J, L)
-    s_E=np.sign(d_E)
-    bu=np.array([s_E,-d_E/T])
-    k=np.min(bu)
-    if math.exp(k)>s_E*random.random():
-        pg[site[0],site[1]]=-pg[site[0],site[1]]
-    #if d_E<=0:
-     #   pg[site[0],site[1]]=-pg[site[0],site[1]]
-    #else:
-     #   if math.e**(-d_E/T)>random.random():
-      #       pg[site[0],site[1]]=-pg[site[0],site[1]]
-    return pg
+    row = rng.integers(0, size)
+    col = rng.integers(0, size)
+
+    delta_energy = spin_flip_energy(
+        lattice,
+        row,
+        col,
+        coupling,
+    )
+
+    if delta_energy <= 0:
+        lattice[row, col] *= -1
+
+    elif rng.random() < math.exp(-delta_energy / temperature):
+        lattice[row, col] *= -1
 
 
-
-def road_to_nowhere(pg,t_eq,L, J, T,C):
-    k=10000
-    record=[]
-    E_store=[]
-    E_tot=[]
-    for i in range(int(0.95*t_eq)):
-        
-        site=[np.random.randint(0,L), np.random.randint(0,L)]
-        pg=flip(site, pg, J, L, T)
-    
-    
+def run_simulation(
+    lattice,
+    temperature,
+    coupling,
+    n_sweeps,
+    rng,
+):
     """
-    for i in range(int(0.05*t_eq)):
-        record.append(np.average(pg))
-        E_store.append(E_per_site(pg, J))
-        E_tot.append(total_E(pg, J))
-        site=[np.random.randint(0,L), np.random.randint(0,L)]
-        pg=flip(site, pg, J, L, T)
-        
-    
-    return [mean_magnetization_per_site(t_eq, L, record),np.average(E_store), np.average(E_tot)]
-"""
+    Run the Metropolis simulation.
 
-    pittura(pg, L, C)    
-        #if i%k==0 :
-            #print(magnetization_per_site(pg))
-    
-    
-    #plt.plot(np.arange(len(record)),record)
+    One Monte Carlo sweep corresponds to L^2 attempted spin flips,
+    where L is the lattice size.
 
+    Returns the final lattice and the magnetization measured after
+    each sweep.
+    """
+    size = lattice.shape[0]
+    attempts_per_sweep = size**2
 
+    magnetization_history = [magnetization(lattice)]
 
-L=40
-T=0.5
-J=1
-eq_distance=100
-t_eq=(L**2)*eq_distance
-pg=create_play_ground(L)
+    for _ in range(n_sweeps):
+        for _ in range(attempts_per_sweep):
+            metropolis_step(
+                lattice,
+                temperature,
+                coupling,
+                rng,
+            )
 
+        magnetization_history.append(magnetization(lattice))
 
-D=tk.Canvas(tk.Tk(), bg="white", height=1500, width=1500)
-
-magna_medi_T=[]
-mean_E_T=[]
-E_tot=[]
-magn_Onsa=[]
-T_f=2
-T_i=0.1
-T_step=0.1
-#for i in range(int((T_f-T_i)/T_step)):   
-#    T=T_i+i*T_step
-#    data_T=road_to_nowhere(pg, t_eq, L, J, T, D)
-#    magna_medi_T.append(data_T[0])
-#    mean_E_T.append(data_T[1])
-#    E_tot.append(data_T[2])
-#    magn_Onsa.append(Onsa_fit(T))
-
-#m_E_T=np.array(E_tot)
-#cap_T=(np.roll(m_E_T,-1)[:m_E_T.size-1]-m_E_T[:m_E_T.size-1])/T_step
-#log_C=[]
-#for i in range(int((3-1.5)/T_step)-1):
-#    if cap_T[int(1.5/T_step)+i]<0 :
-#        cap_T[int(1.5/T_step)+i]=1
-#    log_C.append(math.log(cap_T[int(1.5/T_step)+i],L))
+    return lattice, np.array(magnetization_history)
 
 
-"""
-plt.scatter(np.arange(start=T_i,stop=T_f, step=T_step),magna_medi_T)
-plt.plot(np.arange(start=T_i,stop=T_f, step=T_step),magn_Onsa, color="red")
-plt.xlabel("Temperature")
-plt.ylabel("Mean Magnetization per site")
+def plot_magnetization(magnetization_history):
+    """Plot magnetization as a function of Monte Carlo sweeps."""
+    sweeps = np.arange(len(magnetization_history))
 
-plt.show()
-plt.plot(np.arange(start=T_i,stop=T_f, step=T_step),mean_E_T)
-plt.xlabel("Temperature")
-plt.ylabel("Mean Energy per site")
-plt.show()
-plt.plot(np.linspace(1.5, 3-T_step,int((3-1.5)/T_step) -1),log_C)
-plt.xlabel("Temperature")
-plt.ylabel("Heat Capacity (log)")
-plt.show()
+    plt.plot(sweeps, magnetization_history)
+    plt.xlabel("Monte Carlo sweep")
+    plt.ylabel("Magnetization per site")
+    plt.title("Magnetization evolution")
+    plt.show()
 
 
-print(np.linspace(T_i, T_f-2*T_step,int((T_f-T_i)/T_step) -1))
-"""
-T=1
+def draw_lattice(lattice):
+    """Display the spin lattice using Tkinter."""
+    size = lattice.shape[0]
 
-road_to_nowhere(pg, t_eq, L, J, T, D)
+    cell_width = 10
+    margin = 20
 
-D.pack()
-tk.Tk().mainloop()
+    window_size = 2 * margin + size * cell_width
 
-#popt, pcov= curve_fit(Onsa_fit,np.arange(start=T_i,stop=T_f, step=T_step), magna_medi_T, p0=None)
+    root = tk.Tk()
+    root.title("2D Ising model")
 
-#print('m',popt, pcov)
+    canvas = tk.Canvas(
+        root,
+        width=window_size,
+        height=window_size,
+        bg="white",
+    )
+    canvas.pack()
 
-#plt.axline([0,0],xy2=None, slope=popt[0])
+    for row in range(size):
+        for col in range(size):
+            spin = lattice[row, col]
 
-    
-    
-print(Tc_finder(magna_medi_T, T_step, T_i))
+            if spin == 1:
+                color = "purple"
+            else:
+                color = "orange"
+
+            x0 = margin + col * cell_width
+            y0 = margin + row * cell_width
+            x1 = x0 + cell_width
+            y1 = y0 + cell_width
+
+            canvas.create_rectangle(
+                x0,
+                y0,
+                x1,
+                y1,
+                fill=color,
+                outline=color,
+            )
+
+    root.mainloop()
 
 
+if __name__ == "__main__":
+    # Simulation parameters
+    L = 30
+    T = 2.3
+    J = 1.0
+    N_SWEEPS = 1000
+    SEED = 42
+
+    # Random number generator
+    rng = np.random.default_rng(SEED)
+
+    # Initial random spin configuration
+    lattice = create_lattice(L, rng)
+
+    # Run simulation
+    final_lattice, magnetization_history = run_simulation(
+        lattice=lattice,
+        temperature=T,
+        coupling=J,
+        n_sweeps=N_SWEEPS,
+        rng=rng,
+    )
+
+    # Simple visual checks
+    plot_magnetization(magnetization_history)
+    draw_lattice(final_lattice)
 
