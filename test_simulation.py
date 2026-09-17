@@ -12,12 +12,16 @@ import pytest
 
 from ising_simulation import (
     create_lattice,
-    load_config,
-    validate_config,
     magnetization,
     spin_flip_energy,
     run_simulation,
 )
+
+from launch_single_sim import (
+    load_config,
+    validate_single_config,
+)
+
 
 
 def test_create_lattice_contains_valid_spins():
@@ -75,7 +79,7 @@ temperature = 2.3
     assert np.isclose(config["physics"]["temperature"], 2.3)
 
 
-def test_validate_config_rejects_invalid_parameters():
+def test_validate_single_config_rejects_invalid_parameters():
     """Invalid simulation parameters should raise a ValueError."""
     invalid_configs = [
         {
@@ -146,7 +150,7 @@ def test_validate_config_rejects_invalid_parameters():
 
     for config in invalid_configs:
         with pytest.raises(ValueError):
-            validate_config(config)
+            validate_single_config(config)
 
 
 
