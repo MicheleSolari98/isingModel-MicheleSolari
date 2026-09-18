@@ -6,14 +6,12 @@ Created on Fri Sep 18 13:19:36 2026
 @author: michele_mac
 """
 
+import sys
 from pathlib import Path
 
 from plotter import plot_lattice, plot_magnetization
 from storage import load_single_run
 
-# Set to None to plot the most recently saved single run.
-# To plot a specific run, insert its directory name.
-run_name = None
 
 
 def find_latest_single_run(results_directory):
@@ -42,14 +40,21 @@ if __name__ == "__main__":
         / "results"
     )
 
-    if run_name is None:
+    if len(sys.argv) == 1:
         run_directory = find_latest_single_run(
             results_directory
         )
-    else:
+
+    elif len(sys.argv) == 2:
         run_directory = (
             results_directory
-            / run_name
+            / sys.argv[1]
+        )
+
+    else:
+        raise SystemExit(
+            "Usage: python plot_single_sim.py "
+            "[single_run_directory]"
         )
 
 

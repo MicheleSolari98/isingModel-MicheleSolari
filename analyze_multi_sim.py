@@ -6,6 +6,7 @@ Created on Fri Sep 18 14:01:43 2026
 @author: michele_mac
 """
 
+import sys
 import tomllib
 from pathlib import Path
 
@@ -20,10 +21,6 @@ from analysis import (
 from plotter import (plot_magnetization_vs_temperature, plot_energy_vs_temperature)
 from storage import load_multi_run
 
-
-# Set to None to analyze the most recently saved multi run.
-# To analyze a specific run, insert its directory name.
-run_name = None
 
 
 def find_latest_multi_run(results_directory):
@@ -130,16 +127,24 @@ if __name__ == "__main__":
         / "results"
     )
 
-    if run_name is None:
+    if len(sys.argv) == 1:
         run_directory = find_latest_multi_run(
             results_directory
         )
-    else:
+
+    elif len(sys.argv) == 2:
         run_directory = (
             results_directory
-            / run_name
+            / sys.argv[1]
         )
 
+    else:
+        raise SystemExit(
+            "Usage: python analyze_multi_sim.py "
+            "[multi_run_directory]"
+        )
+        
+        
     results = load_multi_run(
         run_directory
     )
