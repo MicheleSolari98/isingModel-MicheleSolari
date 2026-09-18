@@ -7,6 +7,7 @@ Created on Fri Sep 18 02:06:27 2026
 """
 
 import numpy as np
+from scipy.special import ellipk
 
 
 def autocorrelation_factor(values):
@@ -173,3 +174,109 @@ def onsager_magnetization(temperatures, coupling):
     ) ** (1 / 8)
 
     return theoretical_magnetization
+
+
+
+def energy_per_site(lattice, coupling):
+    """Calculate the energy per site of an Ising configuration."""
+    right_neighbors = np.roll(
+        lattice,
+        -1,
+        axis=1,
+    )
+
+    down_neighbors = np.roll(
+        lattice,
+        -1,
+        axis=0,
+    )
+
+    total_energy = -coupling * np.sum(
+        lattice * (
+            right_neighbors
+            + down_neighbors
+        )
+    )
+
+    return total_energy / lattice.size
+
+
+
+def mean_final_energy(final_lattices, coupling):
+    """Calculate mean final energy per site for each temperature."""
+    number_of_temperatures = final_lattices.shape[0]
+    repetitions = final_lattices.shape[1]
+
+    energies = np.empty(
+        (
+            number_of_temperatures,
+            repetitions,
+        )
+    )
+
+    for i in range(number_of_temperatures):
+        for j in range(repetitions):
+            energies[i, j] = energy_per_site(
+                final_lattices[i, j],
+                coupling,
+            )
+
+    return np.mean(
+        energies,
+        axis=1,
+    )
+
+
+def onsager_energy(temperatures, coupling):
+    """Calculate the exact Ising energy per site in the thermodynamic limit."""
+    if coupling <= 0:
+        raise ValueError("coupling must be positive")
+
+    temperatures = np.asarray(
+        temperatures,
+        dtype=float,
+    )
+
+    if np.any(temperatures <= 0):
+        raise ValueError("temperatures must be positive")
+
+    x = 2 * coupling / temperatures
+
+    modulus = (
+        2 * np.sinh(x)
+        / np.cosh(x) ** 2
+    )
+
+    elliptic_integral = ellipk(
+        modulus ** 2
+    )
+
+    energy = (
+        -coupling
+        / np.tanh(x)
+        * (
+            1
+            + (2 / np.pi)
+            * (
+                2 * np.tanh(x) ** 2
+                - 1
+            )
+            * elliptic_integral
+        )
+    )
+
+    critical_temperature = (
+        2 * coupling
+        / np.log(1 + np.sqrt(2))
+    )
+
+    critical_mask = np.isclose(
+        temperatures,
+        critical_temperature,
+    )
+
+    energy[critical_mask] = (
+        -np.sqrt(2) * coupling
+    )
+
+    return energy

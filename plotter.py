@@ -63,3 +63,33 @@ def plot_magnetization_vs_temperature(
     plt.title("Magnetization versus temperature")
     plt.legend()
     plt.show()
+    
+    
+    
+def plot_energy_vs_temperature(
+    temperatures,
+    measured_energy,
+    theoretical_temperatures,
+    theoretical_energy,
+):
+    """Plot measured and theoretical energy versus temperature."""
+    plt.plot(
+        temperatures,
+        measured_energy,
+        "o",
+        label="Monte Carlo final-state energy",
+    )
+
+    plt.plot(
+        theoretical_temperatures,
+        theoretical_energy,
+        label="Exact energy",
+    )
+
+    plt.xlabel("Temperature")
+    plt.ylabel("Energy per site")
+    plt.title("Energy versus temperature")
+    plt.legend()
+    plt.show()
+    
+    

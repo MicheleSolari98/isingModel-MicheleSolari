@@ -14,8 +14,10 @@ import numpy as np
 from analysis import (
     magnetization_statistics,
     onsager_magnetization,
+    mean_final_energy,
+    onsager_energy,
 )
-from plotter import plot_magnetization_vs_temperature
+from plotter import (plot_magnetization_vs_temperature, plot_energy_vs_temperature)
 from storage import load_multi_run
 
 
@@ -47,6 +49,9 @@ def analyze_and_plot_multi_run(results, config):
     """Analyze and plot the magnetization of a multi run."""
     temperatures = results["temperatures"]
     magnetization_measurements = results["magnetization"]
+    
+    final_lattices = results["final_lattices"]
+    coupling = config["physics"]["coupling"]
 
     (
         mean_magnetization,
@@ -78,10 +83,11 @@ def analyze_and_plot_multi_run(results, config):
         plot_temperature_max,
         theoretical_points,
     )
-
+    
+    #Magnetization
     theoretical_magnetization = onsager_magnetization(
         theoretical_temperatures,
-        coupling=config["physics"]["coupling"],
+        coupling=coupling,
     )
 
     plot_magnetization_vs_temperature(
@@ -91,6 +97,31 @@ def analyze_and_plot_multi_run(results, config):
         theoretical_temperatures,
         theoretical_magnetization,
     )
+    
+    
+    # Energy
+    mean_energy = mean_final_energy(
+        final_lattices,
+        coupling=coupling,
+    )
+
+    theoretical_energy = onsager_energy(
+        theoretical_temperatures,
+        coupling=coupling,
+    )
+
+    plot_energy_vs_temperature(
+        temperatures,
+        mean_energy,
+        theoretical_temperatures,
+        theoretical_energy,
+    )
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
