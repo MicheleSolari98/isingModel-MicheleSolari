@@ -31,3 +31,31 @@ def plot_lattice(lattice):
     plt.title("Final spin configuration")
     plt.axis("off")
     plt.show()
+    
+    
+    
+    
+def plot_magnetization_vs_temperature(
+    temperatures,
+    measured_magnetization,
+    theoretical_magnetization,
+):
+    """Plot measured and theoretical magnetization versus temperature."""
+    plt.plot(
+        temperatures,
+        measured_magnetization,
+        "o",
+        label="Monte Carlo",
+    )
+
+    plt.plot(
+        temperatures,
+        theoretical_magnetization,
+        label="Exact solution",
+    )
+
+    plt.xlabel("Temperature")
+    plt.ylabel("Absolute magnetization per site")
+    plt.title("Magnetization versus temperature")
+    plt.legend()
+    plt.show()

@@ -29,6 +29,10 @@ from launch_multi_sim import (
 )
 
 
+from analysis import (
+    onsager_magnetization,
+)
+
 
 
 def test_create_lattice_contains_valid_spins():
@@ -304,7 +308,25 @@ def test_multi_run_output_shape():
     
     
     
-    
+def test_onsager_magnetization():
+    """Onsager theoretical magnetization should be ordered below Tc and zero above Tc."""
+    temperatures = np.array([
+        1.0,
+        3.0,
+    ])
+
+    result = onsager_magnetization(
+        temperatures,
+        coupling=1.0,
+    )
+
+    assert result[0] > 0.9
+
+    assert np.isclose(
+        result[1],
+        0.0,
+        atol=1e-12,
+    )
     
     
     

@@ -13,6 +13,12 @@ import numpy as np
 
 from ising_simulation import create_lattice, run_simulation
 
+from analysis import (
+    mean_absolute_magnetization,
+    onsager_magnetization,
+)
+
+from plotter import plot_magnetization_vs_temperature
 
 
 
@@ -266,13 +272,22 @@ if __name__ == "__main__":
         run_multi_simulation(config)
     )
 
-    print("Temperature sweep completed.")
-    print(
-        "Magnetization measurements shape:",
-        magnetization_measurements.shape,
+    # Analyze magnetization measurements
+    mean_magnetization = mean_absolute_magnetization(
+        magnetization_measurements
     )
 
+    theoretical_magnetization = onsager_magnetization(
+        temperatures,
+        coupling=config["physics"]["coupling"],
+    )
 
+    # Plot Monte Carlo results and exact solution
+    plot_magnetization_vs_temperature(
+        temperatures,
+        mean_magnetization,
+        theoretical_magnetization,
+    )
 
 
 

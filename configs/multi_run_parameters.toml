@@ -7,10 +7,10 @@ equilibration_cycles = 600
 measurement_cycles = 600
 measurement_every = 20
 seed = 24
-repetitions = 1
+repetitions = 2
 
 [temperature_sweep]
-start = 1.0
+start = 1.2
 stop = 3.5
 points = 3
 include_critical_temperature = true
