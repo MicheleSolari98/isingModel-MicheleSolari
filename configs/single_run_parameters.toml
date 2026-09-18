@@ -11,3 +11,4 @@ seed = 24
 [output]
 record_time_series = true
 sample_every = 1
+save_results = true

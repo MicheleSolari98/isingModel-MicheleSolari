@@ -13,7 +13,7 @@ import numpy as np
 
 from ising_simulation import create_lattice, run_simulation
 from plotter import plot_lattice, plot_magnetization
-
+from storage import save_single_run
 
 
 
@@ -37,6 +37,7 @@ def validate_single_config(config):
 
         record_time_series = config["output"]["record_time_series"]
         sample_every = config["output"]["sample_every"]
+        save_results = config["output"]["save_results"]
 
     except (KeyError, TypeError) as error:
         raise ValueError("Missing or invalid configuration structure") from error
@@ -81,7 +82,8 @@ def validate_single_config(config):
 
     if type(sample_every) is not int or sample_every <= 0:
         raise ValueError("sample_every must be a positive integer")
-
+    if type(save_results) is not bool:
+        raise ValueError("save_results must be a boolean")
 
 
 
@@ -110,6 +112,7 @@ if __name__ == "__main__":
     # Output parameters
     record_time_series = config["output"]["record_time_series"]
     sample_every = config["output"]["sample_every"]
+    save_results = config["output"]["save_results"]
 
     # Random number generator
     rng = np.random.default_rng(seed)
@@ -134,7 +137,27 @@ if __name__ == "__main__":
         sample_every=sample_every,
     )
 
-    # Simple visual checks
+    # Save raw results if requested
+    if save_results:
+        results_directory = (
+            Path(__file__).parent
+            / "results"
+        )
+
+        saved_run_directory = save_single_run(
+            results_directory=results_directory,
+            config_path=config_path,
+            sampled_cycles=sampled_cycles,
+            magnetization_history=magnetization_history,
+            final_lattice=final_lattice,
+        )
+
+        print(
+            "Results saved in:",
+            saved_run_directory,
+        )
+
+    # Automatic plotting
     if record_time_series:
         plot_magnetization(
             sampled_cycles,
@@ -142,8 +165,6 @@ if __name__ == "__main__":
         )
 
     plot_lattice(final_lattice)
-
-
 
 
 

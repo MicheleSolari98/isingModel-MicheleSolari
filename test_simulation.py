@@ -35,6 +35,11 @@ from analysis import (
 )
 
 
+from storage import (
+    load_single_run,
+    save_single_run,
+)
+
 
 def test_create_lattice_contains_valid_spins():
     """The lattice should contain only integer spins -1 and +1."""
@@ -108,6 +113,7 @@ def test_validate_single_config_rejects_invalid_parameters():
             "output": {
                 "record_time_series": True,
                 "sample_every": 1,
+                "save_results": True,
             },
         },
         {
@@ -124,6 +130,7 @@ def test_validate_single_config_rejects_invalid_parameters():
             "output": {
                 "record_time_series": True,
                 "sample_every": 1,
+                "save_results": True,
             },
         },
         {
@@ -156,6 +163,7 @@ def test_validate_single_config_rejects_invalid_parameters():
             "output": {
                 "record_time_series": True,
                 "sample_every": 0,
+                "save_results": True,
             },
         },
     ]
@@ -360,7 +368,56 @@ def test_between_seed_dispersion_increases_error():
     assert error_different[0] > error_similar[0]
     
     
-    
+
+def test_single_run_storage(tmp_path):
+    """Saved single-run data should be loaded unchanged."""
+    sampled_cycles = np.array([0, 1, 2])
+
+    magnetization_history = np.array([
+        0.1,
+        0.2,
+        0.3,
+    ])
+
+    final_lattice = np.array([
+        [1, -1],
+        [-1, 1],
+    ])
+
+    config_path = tmp_path / "config.toml"
+
+    config_path.write_text(
+        "[test]\nvalue = 1\n"
+    )
+
+    run_directory = save_single_run(
+        results_directory=tmp_path / "results",
+        config_path=config_path,
+        sampled_cycles=sampled_cycles,
+        magnetization_history=magnetization_history,
+        final_lattice=final_lattice,
+    )
+
+    results = load_single_run(run_directory)
+
+    assert np.array_equal(
+        results["sampled_cycles"],
+        sampled_cycles,
+    )
+
+    assert np.array_equal(
+        results["magnetization_history"],
+        magnetization_history,
+    )
+
+    assert np.array_equal(
+        results["final_lattice"],
+        final_lattice,
+    )
+
+    assert (
+        run_directory / "parameters.toml"
+    ).exists()
     
     
     
