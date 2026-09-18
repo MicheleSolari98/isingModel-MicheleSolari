@@ -18,3 +18,4 @@ include_critical_temperature = true
 [output]
 record_time_series = false
 sample_every = 1
+save_results = true

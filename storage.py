@@ -59,3 +59,49 @@ def load_single_run(run_directory):
         }
 
     return results
+
+
+
+def save_multi_run(
+    results_directory,
+    config_path,
+    results,
+):
+    """Save the raw results and configuration of a multi simulation."""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    run_directory = (
+        Path(results_directory)
+        / f"multi_run_{timestamp}"
+    )
+
+    run_directory.mkdir(
+        parents=True,
+        exist_ok=False,
+    )
+
+    np.savez_compressed(
+        run_directory / "data.npz",
+        **results,
+    )
+
+    shutil.copy2(
+        config_path,
+        run_directory / "parameters.toml",
+    )
+
+    return run_directory
+
+
+def load_multi_run(run_directory):
+    """Load the raw results of a saved multi simulation."""
+    data_path = Path(run_directory) / "data.npz"
+
+    with np.load(data_path) as data:
+        results = {
+            key: data[key]
+            for key in data.files
+        }
+
+    return results
+

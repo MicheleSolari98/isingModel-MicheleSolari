@@ -13,13 +13,8 @@ import numpy as np
 
 from ising_simulation import create_lattice, run_simulation
 
-from analysis import (
-    magnetization_statistics,
-    onsager_magnetization,
-)
-
-from plotter import plot_magnetization_vs_temperature
-
+from analyze_multi_sim import analyze_and_plot_multi_run
+from storage import save_multi_run
 
 
 def load_config(config_path):
@@ -50,6 +45,7 @@ def validate_multi_config(config):
 
         record_time_series = config["output"]["record_time_series"]
         sample_every = config["output"]["sample_every"]
+        save_results = config["output"]["save_results"]
 
     except (KeyError, TypeError) as error:
         raise ValueError("Missing or invalid configuration structure") from error
@@ -134,6 +130,8 @@ def validate_multi_config(config):
     if type(sample_every) is not int or sample_every <= 0:
         raise ValueError("sample_every must be a positive integer")
         
+    if type(save_results) is not bool:
+        raise ValueError("save_results must be a boolean")
         
         
         
@@ -199,6 +197,7 @@ def run_multi_simulation(config):
     record_time_series = config["output"]["record_time_series"]
     sample_every = config["output"]["sample_every"]
 
+    # Temperature grid
     temperatures = create_temperature_grid(
         start=temperature_start,
         stop=temperature_stop,
@@ -207,10 +206,18 @@ def run_multi_simulation(config):
         include_critical_temperature=include_critical_temperature,
     )
 
-    number_of_measurements = (
-        measurement_cycles // measurement_every
+    # Measurement cycles relative to the beginning of the measurement phase
+    measurement_cycle_points = np.arange(
+        measurement_every,
+        measurement_cycles + 1,
+        measurement_every,
     )
 
+    number_of_measurements = len(
+        measurement_cycle_points
+    )
+
+    # Raw-result storage
     magnetization_measurements = np.empty(
         (
             len(temperatures),
@@ -219,6 +226,25 @@ def run_multi_simulation(config):
         )
     )
 
+    seeds = np.empty(
+        (
+            len(temperatures),
+            repetitions,
+        ),
+        dtype=int,
+    )
+
+    final_lattices = np.empty(
+        (
+            len(temperatures),
+            repetitions,
+            lattice_size,
+            lattice_size,
+        ),
+        dtype=int,
+    )
+
+    # Run simulations
     for i in range(len(temperatures)):
         temperature = temperatures[i]
 
@@ -229,7 +255,11 @@ def run_multi_simulation(config):
                 + j
             )
 
-            rng = np.random.default_rng(current_seed)
+            seeds[i, j] = current_seed
+
+            rng = np.random.default_rng(
+                current_seed
+            )
 
             lattice = create_lattice(
                 lattice_size,
@@ -257,9 +287,19 @@ def run_multi_simulation(config):
                 current_measurements
             )
 
-    return temperatures, magnetization_measurements
+            final_lattices[i, j] = (
+                final_lattice
+            )
 
+    results = {
+        "temperatures": temperatures,
+        "seeds": seeds,
+        "measurement_cycles": measurement_cycle_points,
+        "magnetization": magnetization_measurements,
+        "final_lattices": final_lattices,
+    }
 
+    return results
 
 
 
@@ -274,55 +314,34 @@ if __name__ == "__main__":
 
     config = load_config(config_path)
 
-    temperatures, magnetization_measurements = (
-        run_multi_simulation(config)
+    # Run simulations
+    results = run_multi_simulation(
+        config
     )
 
-    # Analyze magnetization measurements
-    (
-    mean_magnetization,
-    magnetization_error,
-) = magnetization_statistics(
-    magnetization_measurements
-)
-    # Parameters for the theoretical curve
-    plot_margin_fraction = 0.05
-    theoretical_points = 500
+    # Save raw results if requested
+    if config["output"]["save_results"]:
+        results_directory = (
+            Path(__file__).parent
+            / "results"
+        )
 
-    plot_margin = plot_margin_fraction * (
-        temperatures.max() - temperatures.min()
+        saved_run_directory = save_multi_run(
+            results_directory=results_directory,
+            config_path=config_path,
+            results=results,
+        )
+
+        print(
+            "Results saved in:",
+            saved_run_directory,
+        )
+
+    # Automatic analysis and plotting
+    analyze_and_plot_multi_run(
+        results,
+        config,
     )
-
-    plot_temperature_min = max(
-        temperatures.min() - plot_margin,
-        1e-6,
-    )
-
-    plot_temperature_max = (
-        temperatures.max() + plot_margin
-    )
-
-    theoretical_temperatures = np.linspace(
-        plot_temperature_min,
-        plot_temperature_max,
-        theoretical_points,
-    )
-
-    theoretical_magnetization = onsager_magnetization(
-        theoretical_temperatures,
-        coupling=config["physics"]["coupling"],
-    )
-
-    # Plot Monte Carlo results and exact solution
-    plot_magnetization_vs_temperature(
-        temperatures,
-        mean_magnetization,
-        magnetization_error,
-        theoretical_temperatures,
-        theoretical_magnetization,
-    )
-
-
 
 
 

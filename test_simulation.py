@@ -37,7 +37,9 @@ from analysis import (
 
 from storage import (
     load_single_run,
+    load_multi_run,
     save_single_run,
+    save_multi_run,
 )
 
 
@@ -304,16 +306,39 @@ def test_multi_run_output_shape():
         "output": {
             "record_time_series": False,
             "sample_every": 1,
+            "save_results": False,
         },
     }
 
-    temperatures, magnetization_measurements = (
-        run_multi_simulation(config)
+    results = run_multi_simulation(
+        config
     )
 
-    assert len(temperatures) == 4
-    assert magnetization_measurements.shape == (4, 2, 2)
-    
+    assert len(
+        results["temperatures"]
+    ) == 4
+
+    assert results["magnetization"].shape == (
+        4,
+        2,
+        2,
+    )
+
+    assert results["seeds"].shape == (
+        4,
+        2,
+    )
+
+    assert results["measurement_cycles"].shape == (
+        2,
+    )
+
+    assert results["final_lattices"].shape == (
+        4,
+        2,
+        4,
+        4,
+    )    
     
     
     
@@ -420,6 +445,72 @@ def test_single_run_storage(tmp_path):
     ).exists()
     
     
+    
+def test_multi_run_storage(tmp_path):
+    """Saved multi-run data should be loaded unchanged."""
+    results = {
+        "temperatures": np.array([
+            1.0,
+            2.0,
+        ]),
+        "seeds": np.array([
+            [42, 43],
+            [44, 45],
+        ]),
+        "measurement_cycles": np.array([
+            2,
+            4,
+        ]),
+        "magnetization": np.array([
+            [
+                [0.8, 0.7],
+                [0.9, 0.8],
+            ],
+            [
+                [0.3, 0.2],
+                [0.4, 0.3],
+            ],
+        ]),
+        "final_lattices": np.ones(
+            (
+                2,
+                2,
+                4,
+                4,
+            ),
+            dtype=int,
+        ),
+    }
+
+    config_path = (
+        tmp_path
+        / "config.toml"
+    )
+
+    config_path.write_text(
+        "[test]\nvalue = 1\n"
+    )
+
+    run_directory = save_multi_run(
+        results_directory=tmp_path / "results",
+        config_path=config_path,
+        results=results,
+    )
+
+    loaded_results = load_multi_run(
+        run_directory
+    )
+
+    for key in results:
+        assert np.array_equal(
+            loaded_results[key],
+            results[key],
+        )
+
+    assert (
+        run_directory
+        / "parameters.toml"
+    ).exists()
     
     
     
