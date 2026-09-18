@@ -30,6 +30,7 @@ from launch_multi_sim import (
 
 
 from analysis import (
+    magnetization_statistics,
     onsager_magnetization,
 )
 
@@ -328,7 +329,35 @@ def test_onsager_magnetization():
         atol=1e-12,
     )
     
-    
+def test_between_seed_dispersion_increases_error():
+    """Independent runs with different means should increase the final error."""
+    similar_seeds = np.array(
+        [
+            [
+                [0.2, 0.4, 0.2, 0.4],
+                [0.2, 0.4, 0.2, 0.4],
+            ]
+        ]
+    )
+
+    different_seeds = np.array(
+        [
+            [
+                [0.2, 0.4, 0.2, 0.4],
+                [0.6, 0.8, 0.6, 0.8],
+            ]
+        ]
+    )
+
+    _, error_similar = magnetization_statistics(
+        similar_seeds
+    )
+
+    _, error_different = magnetization_statistics(
+        different_seeds
+    )
+
+    assert error_different[0] > error_similar[0]
     
     
     

@@ -38,15 +38,18 @@ def plot_lattice(lattice):
 def plot_magnetization_vs_temperature(
     temperatures,
     measured_magnetization,
+    magnetization_error,
     theoretical_temperatures,
     theoretical_magnetization,
 ):
     """Plot measured and theoretical magnetization versus temperature."""
-    plt.plot(
+    plt.errorbar(
         temperatures,
         measured_magnetization,
-        "o",
-        label="Monte Carlo",
+        yerr=magnetization_error,
+        fmt="o",
+        capsize=3,
+        label="Monte Carlo <|m|>",
     )
 
     plt.plot(

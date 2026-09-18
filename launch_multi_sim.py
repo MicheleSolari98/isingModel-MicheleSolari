@@ -14,7 +14,7 @@ import numpy as np
 from ising_simulation import create_lattice, run_simulation
 
 from analysis import (
-    mean_absolute_magnetization,
+    magnetization_statistics,
     onsager_magnetization,
 )
 
@@ -86,7 +86,13 @@ def validate_multi_config(config):
         raise ValueError(
             "measurement_every cannot exceed measurement_cycles"
         )
-
+    
+    if measurement_cycles // measurement_every < 2:
+        raise ValueError(
+            "At least two measurements per run are required"
+        )
+    
+    
     if type(seed) is not int or seed < 0:
         raise ValueError("seed must be a non-negative integer")
 
@@ -273,10 +279,12 @@ if __name__ == "__main__":
     )
 
     # Analyze magnetization measurements
-    mean_magnetization = mean_absolute_magnetization(
-        magnetization_measurements
-    )
-
+    (
+    mean_magnetization,
+    magnetization_error,
+) = magnetization_statistics(
+    magnetization_measurements
+)
     # Parameters for the theoretical curve
     plot_margin_fraction = 0.05
     theoretical_points = 500
@@ -309,6 +317,7 @@ if __name__ == "__main__":
     plot_magnetization_vs_temperature(
         temperatures,
         mean_magnetization,
+        magnetization_error,
         theoretical_temperatures,
         theoretical_magnetization,
     )
