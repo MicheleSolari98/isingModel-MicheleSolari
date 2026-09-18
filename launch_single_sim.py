@@ -87,11 +87,6 @@ def validate_single_config(config):
 
 
 
-
-
-
-
-
 if __name__ == "__main__":
     config_path = (
         Path(__file__).parent

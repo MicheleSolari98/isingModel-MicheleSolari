@@ -22,6 +22,13 @@ from launch_single_sim import (
     validate_single_config,
 )
 
+from launch_multi_sim import (
+    validate_multi_config,
+    create_temperature_grid,
+    run_multi_simulation,
+)
+
+
 
 
 def test_create_lattice_contains_valid_spins():
@@ -236,6 +243,76 @@ def test_measurement_sampling():
     )
 
     assert len(magnetization_measurements) == 5
+    
+    
+    
+def test_temperature_grid_includes_critical_temperature():
+    """The temperature grid should include Tc for J = 1 when requested."""
+    temperatures = create_temperature_grid(
+        start=1.0,
+        stop=3.5,
+        points=5,
+        coupling=1.0,
+        include_critical_temperature=True,
+    )
+
+    assert np.any(
+        np.isclose(
+            temperatures,
+            2.269,
+            rtol=0,
+            atol=1e-3,
+        )
+    )
+    
+    
+    
+    
+def test_multi_run_output_shape():
+    """The multi-run launcher should return the expected result shape."""
+    config = {
+        "physics": {
+            "lattice_size": 4,
+            "coupling": 1.0,
+        },
+        "simulation": {
+            "equilibration_cycles": 1,
+            "measurement_cycles": 4,
+            "measurement_every": 2,
+            "seed": 42,
+            "repetitions": 2,
+        },
+        "temperature_sweep": {
+            "start": 1.0,
+            "stop": 3.0,
+            "points": 3,
+            "include_critical_temperature": True,
+        },
+        "output": {
+            "record_time_series": False,
+            "sample_every": 1,
+        },
+    }
+
+    temperatures, magnetization_measurements = (
+        run_multi_simulation(config)
+    )
+
+    assert len(temperatures) == 4
+    assert magnetization_measurements.shape == (4, 2, 2)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
