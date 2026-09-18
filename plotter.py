@@ -38,6 +38,7 @@ def plot_lattice(lattice):
 def plot_magnetization_vs_temperature(
     temperatures,
     measured_magnetization,
+    theoretical_temperatures,
     theoretical_magnetization,
 ):
     """Plot measured and theoretical magnetization versus temperature."""
@@ -49,7 +50,7 @@ def plot_magnetization_vs_temperature(
     )
 
     plt.plot(
-        temperatures,
+        theoretical_temperatures,
         theoretical_magnetization,
         label="Exact solution",
     )

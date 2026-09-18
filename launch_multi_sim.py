@@ -277,8 +277,31 @@ if __name__ == "__main__":
         magnetization_measurements
     )
 
+    # Parameters for the theoretical curve
+    plot_margin_fraction = 0.05
+    theoretical_points = 500
+
+    plot_margin = plot_margin_fraction * (
+        temperatures.max() - temperatures.min()
+    )
+
+    plot_temperature_min = max(
+        temperatures.min() - plot_margin,
+        1e-6,
+    )
+
+    plot_temperature_max = (
+        temperatures.max() + plot_margin
+    )
+
+    theoretical_temperatures = np.linspace(
+        plot_temperature_min,
+        plot_temperature_max,
+        theoretical_points,
+    )
+
     theoretical_magnetization = onsager_magnetization(
-        temperatures,
+        theoretical_temperatures,
         coupling=config["physics"]["coupling"],
     )
 
@@ -286,9 +309,9 @@ if __name__ == "__main__":
     plot_magnetization_vs_temperature(
         temperatures,
         mean_magnetization,
+        theoretical_temperatures,
         theoretical_magnetization,
     )
-
 
 
 
