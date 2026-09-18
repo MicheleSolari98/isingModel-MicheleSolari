@@ -2,7 +2,7 @@
 
 Monte Carlo simulation of the two-dimensional Ising model on a square lattice using the Metropolis algorithm.
 
-The project supports both single-temperature simulations and temperature sweeps, together with statistical analysis, comparison with exact analytical results, data storage, reproducible random-number generation, and plotting of saved simulations.
+The project supports both single-temperature simulations and temperature sweeps, together with statistical analysis, comparison with exact analytical results, data storage, reproducible random-number generation, and plotting of previously saved simulations.
 
 ## Features
 
@@ -67,7 +67,7 @@ At every attempted update, one lattice site is selected randomly and its spin is
 s_i \rightarrow -s_i.
 ```
 
-Only the interaction between this spin and its four nearest neighbors changes. The corresponding energy difference is therefore
+Only the interaction between this spin and its four nearest neighbors changes. The corresponding energy difference is
 
 ```math
 \Delta E =
@@ -107,21 +107,59 @@ A cycle therefore corresponds, on average, to one attempted update per lattice s
 
 # Results
 
-The program can be used either to study the time evolution of a system at one fixed temperature or to investigate its behavior over a range of temperatures.
+The program can be used either to study the evolution of a system at one fixed temperature or to investigate its behavior over a range of temperatures.
 
-## Single-temperature simulation
+## Single-temperature simulations
 
-A single simulation can record the magnetization during the Monte Carlo evolution.
+Single-temperature simulations provide a direct view of how the microscopic spin configuration and the macroscopic magnetization change with temperature.
 
-![Magnetization as a function of Monte Carlo cycles](figures/single_magnetization.png)
+The following final configurations were obtained at four representative temperatures.
 
-The final spin configuration can also be visualized directly.
+<table>
+<tr>
+<th>T = 1.0</th>
+<th>T = 2.269</th>
+<th>T = 4.0</th>
+<th>T = 8.0</th>
+</tr>
+<tr>
+<td><img src="figures/single_final_Lattice_T_1p0.png" width="100%"></td>
+<td><img src="figures/single_final_Lattice_T_2p269.png" width="100%"></td>
+<td><img src="figures/single_final_Lattice_T_4.png" width="100%"></td>
+<td><img src="figures/single_final_Lattice_T_8.png" width="100%"></td>
+</tr>
+</table>
 
-![Final Ising lattice](figures/single_final_lattice.png)
+At low temperature, neighboring spins strongly favor alignment and large ordered regions dominate the lattice.
 
-The magnetization history makes it possible to observe the equilibration process and the fluctuations around the equilibrium state.
+Close to the critical temperature, large correlated domains coexist with fluctuations on many spatial scales.
 
-The lattice plot provides a direct visualization of the magnetic domains present in the final configuration.
+As the temperature is increased further above the transition, thermal fluctuations increasingly break up the ordered regions. The typical correlated domains become smaller and the lattice approaches a disordered configuration containing rapidly varying local spin orientations.
+
+The corresponding magnetization histories are shown below.
+
+<table>
+<tr>
+<th>T = 1.0</th>
+<th>T = 2.269</th>
+<th>T = 4.0</th>
+<th>T = 8.0</th>
+</tr>
+<tr>
+<td><img src="figures/single_magn_T_1p0.png" width="100%"></td>
+<td><img src="figures/single_magn_T_2p269.png" width="100%"></td>
+<td><img src="figures/single_magn_T_4.png" width="100%"></td>
+<td><img src="figures/single_magn_T_8.png" width="100%"></td>
+</tr>
+</table>
+
+At low temperature, the system remains strongly magnetized because most spins belong to the same ordered phase.
+
+Around the critical temperature, large fluctuations appear because correlated regions can reorganize over large length scales.
+
+Above the transition, there is no persistent macroscopic magnetic order. The magnetization therefore fluctuates around zero. At sufficiently high temperature, these fluctuations remain confined relatively close to zero because the orientations of different spins are only weakly correlated.
+
+These examples illustrate the connection between the microscopic lattice configurations and the corresponding macroscopic magnetization.
 
 ## Temperature sweep
 
@@ -177,13 +215,58 @@ The values obtained from the independent repetitions are averaged at each temper
 
 # Using the code
 
-The programs should be run from the root directory of the repository.
+The repository contains two different types of executable scripts:
 
-Simulation parameters are stored in TOML configuration files inside the `configs/` directory.
+- `launch_single_sim.py` and `launch_multi_sim.py` generate new Monte Carlo simulations;
+- `plot_single_sim.py` and `analyze_multi_sim.py` work with simulations that have already been saved.
 
-## Single-temperature simulation
+The repository includes representative saved results inside `results/`.
 
-Single-temperature simulations use
+This means that the analysis and plotting scripts can be executed immediately after cloning the repository, without first generating a new simulation.
+
+The configuration files inside `configs/`, on the other hand, intentionally use relatively small simulation sizes and short runs.
+
+They are designed to make launching a new simulation fast and lightweight, so that the behavior of the code can be checked without requiring a long computation.
+
+Larger or more accurate simulations can be obtained simply by increasing the corresponding parameters in the TOML configuration files.
+
+All commands below should be run from the root directory of the repository.
+
+---
+
+## Using saved single-run results
+
+To plot the most recently saved single-temperature simulation:
+
+```bash
+python plot_single_sim.py
+```
+
+No result directory needs to be specified.
+
+The program automatically finds the most recent compatible single-run directory inside `results/`.
+
+A particular saved run can instead be selected by passing its directory name:
+
+```bash
+python plot_single_sim.py single_run_YYYYMMDD_HHMMSS
+```
+
+For example:
+
+```bash
+python plot_single_sim.py single_run_20260918_193500
+```
+
+The script loads the saved magnetization history and final lattice and reproduces the plots without performing the Monte Carlo simulation again.
+
+The script can also be launched directly from an IDE such as Spyder. When no result is explicitly specified, the most recent saved single run is used.
+
+---
+
+## Running a new single-temperature simulation
+
+New single-temperature simulations use
 
 ```text
 configs/single_run_parameters.toml
@@ -208,6 +291,8 @@ sample_every = 1
 save_results = true
 ```
 
+The configuration included in the repository may use smaller values than those shown here so that a test simulation finishes quickly.
+
 ### Single-run parameters
 
 `lattice_size`
@@ -226,7 +311,7 @@ Temperature at which the simulation is performed.
 
 Number of Monte Carlo cycles performed before the measurement phase.
 
-These cycles allow the system to approach equilibrium before the part of the simulation that is considered for measurements.
+These cycles allow the system to approach equilibrium before the part of the simulation used for measurements.
 
 `measurement_cycles`
 
@@ -258,7 +343,7 @@ stores one magnetization value every five Monte Carlo cycles.
 
 If `true`, the numerical results and a copy of the configuration are saved.
 
-### Running a single simulation
+### Launching the simulation
 
 Run:
 
@@ -266,7 +351,7 @@ Run:
 python launch_single_sim.py
 ```
 
-The program reads the parameters from `single_run_parameters.toml`, runs the simulation and displays the magnetization history and final lattice.
+The program reads `single_run_parameters.toml`, performs the simulation and displays the magnetization history and final lattice.
 
 If
 
@@ -280,41 +365,56 @@ a new directory is created inside `results/`:
 results/single_run_YYYYMMDD_HHMMSS/
 ```
 
-The saved run contains the numerical data and a copy of the configuration used to produce them.
+The saved run contains the numerical data and a copy of the configuration used to generate them.
 
-### Plotting a saved single simulation
+---
 
-A saved simulation can be plotted again without rerunning the Monte Carlo calculation.
+## Using saved temperature-sweep results
 
-To plot the most recently saved single run:
+A saved temperature sweep can be analyzed without repeating any Monte Carlo simulation.
+
+To analyze the most recently saved multi-run:
 
 ```bash
-python plot_single_sim.py
+python analyze_multi_sim.py
 ```
 
 No result directory needs to be specified.
 
-A particular saved run can instead be selected by passing its directory name:
+The script automatically selects the most recent compatible multi-run inside `results/`.
+
+To analyze a specific saved run:
 
 ```bash
-python plot_single_sim.py single_run_YYYYMMDD_HHMMSS
+python analyze_multi_sim.py multi_run_YYYYMMDD_HHMMSS
 ```
 
 For example:
 
 ```bash
-python plot_single_sim.py single_run_20260918_193500
+python analyze_multi_sim.py multi_run_20260918_193500
 ```
 
-The script loads the stored magnetization history and final lattice and reproduces the corresponding plots.
+The analysis script:
 
-The script can also be executed directly from an IDE such as Spyder. When no run is explicitly specified, the most recently saved single run is selected automatically.
+1. loads the raw saved data;
+2. calculates the mean absolute magnetization;
+3. estimates its statistical uncertainty;
+4. calculates the energy from the saved final configurations;
+5. evaluates the exact theoretical curves;
+6. produces the magnetization and energy plots.
+
+The Monte Carlo simulation itself is not repeated.
+
+The saved results included in the repository can therefore be analyzed immediately after cloning the project.
+
+This also makes it possible to modify analysis or plotting code and immediately apply the changes to existing simulation data.
 
 ---
 
-## Temperature sweep
+## Running a new temperature sweep
 
-Temperature sweeps use
+New temperature sweeps use
 
 ```text
 configs/multi_run_parameters.toml
@@ -346,9 +446,11 @@ sample_every = 1
 save_results = true
 ```
 
-### Multi-run parameters
+The configuration included in `configs/` is intentionally kept relatively small so that a complete test sweep can be executed quickly.
 
-The following physical parameters have the same meaning as in the single-temperature simulation:
+For higher-quality numerical results, the lattice size, equilibration time, measurement time, number of temperature points and number of repetitions can be increased.
+
+### Multi-run parameters
 
 `lattice_size`
 
@@ -357,8 +459,6 @@ Linear lattice size.
 `coupling`
 
 Nearest-neighbor interaction strength.
-
-The simulation-specific parameters are:
 
 `equilibration_cycles`
 
@@ -390,9 +490,9 @@ A different deterministic seed is generated from this value for every temperatur
 
 Number of independent simulations performed at each temperature.
 
-Independent repetitions provide separate Monte Carlo trajectories and allow fluctuations between different runs to be included in the statistical analysis.
+Independent repetitions provide separate Monte Carlo trajectories and allow variations between different simulations to be included in the statistical analysis.
 
-The temperature-sweep parameters are:
+### Temperature-sweep parameters
 
 `start`
 
@@ -412,7 +512,7 @@ If `true`, the exact critical temperature is also included in the temperature gr
 
 This ensures that the simulation explicitly contains a point at the phase transition even when it is not one of the equally spaced temperatures.
 
-The output parameters are:
+### Output parameters
 
 `record_time_series`
 
@@ -428,7 +528,7 @@ Sampling interval for the optional time series.
 
 If `true`, the raw multi-run results and the configuration used to generate them are saved.
 
-### Running a temperature sweep
+### Launching the temperature sweep
 
 Run:
 
@@ -436,11 +536,9 @@ Run:
 python launch_multi_sim.py
 ```
 
-The program performs the complete temperature sweep.
+For every temperature, the program performs the requested number of independent simulations.
 
-For each temperature, several independent simulations are run according to the value of `repetitions`.
-
-After the simulations are complete, the program performs the statistical analysis and displays the magnetization and energy plots.
+After the simulations are complete, it performs the statistical analysis and displays the magnetization and energy plots.
 
 If saving is enabled, the output is stored in a directory similar to
 
@@ -466,45 +564,6 @@ The saved numerical data include:
 - measurement-cycle positions;
 - magnetization measurements;
 - final lattice configurations.
-
-### Analyzing a saved temperature sweep
-
-A saved temperature sweep can be analyzed again without repeating the Monte Carlo simulations.
-
-To analyze the most recently saved multi-run:
-
-```bash
-python analyze_multi_sim.py
-```
-
-No result directory has to be specified.
-
-To analyze a specific saved run:
-
-```bash
-python analyze_multi_sim.py multi_run_YYYYMMDD_HHMMSS
-```
-
-For example:
-
-```bash
-python analyze_multi_sim.py multi_run_20260918_193500
-```
-
-When no directory name is provided, the program automatically selects the most recently saved multi-run.
-
-The analysis script:
-
-1. loads the raw saved data;
-2. calculates the mean absolute magnetization;
-3. estimates its statistical uncertainty;
-4. calculates the energy from the saved final configurations;
-5. evaluates the exact theoretical curves;
-6. produces the magnetization and energy plots.
-
-The Monte Carlo simulation itself is not repeated.
-
-This makes it possible to modify analysis or plotting code and immediately apply the changes to previously generated simulations.
 
 ---
 
@@ -558,9 +617,9 @@ The purpose of this phase is to allow the lattice to approach thermal equilibriu
 
 After equilibration, the simulation continues for `measurement_cycles`.
 
-During a multi-run simulation, the magnetization is sampled every `measurement_every` cycles.
+During a multi-run simulation, magnetization is sampled every `measurement_every` cycles.
 
-This produces a time series of equilibrium measurements for each independent simulation.
+This produces a sequence of equilibrium measurements for each independent simulation.
 
 ## Single-run workflow
 
@@ -585,7 +644,7 @@ plotter.py
 
 If saving is enabled, `storage.py` stores the raw results.
 
-The resulting magnetization history and final lattice are then passed to `plotter.py`.
+The resulting magnetization history and final lattice are passed to `plotter.py`.
 
 A previously saved simulation can instead be loaded directly by `plot_single_sim.py`.
 
@@ -614,7 +673,7 @@ analysis.py
 plotter.py
 ```
 
-For every temperature and every repetition, the program creates an independent simulation.
+For every temperature and repetition, the program creates an independent simulation.
 
 The resulting raw data are organized by temperature and repetition.
 
@@ -672,7 +731,7 @@ storage.py
 
 Simulation data are stored using compressed NumPy files.
 
-The saved configuration is kept as a separate TOML file in the same result directory.
+The configuration used for the simulation is stored as a separate TOML file in the same result directory.
 
 ---
 
@@ -684,7 +743,7 @@ Simulation, analysis and plotting are intentionally kept separate.
 
 Monte Carlo simulations can be computationally expensive, while analysis and plotting are comparatively inexpensive.
 
-Saving the raw simulation output makes it possible to change the analysis or visualization without having to repeat the simulation.
+Saving the raw simulation output makes it possible to modify the analysis or visualization without having to repeat the simulation.
 
 It also makes individual runs easier to inspect and reproduce.
 
@@ -692,19 +751,29 @@ It also makes individual runs easier to inspect and reproduce.
 
 Simulation parameters are stored in TOML files instead of being hard-coded inside the Python source code.
 
-This allows the physical and numerical parameters to be changed without modifying the program logic.
+This allows physical and numerical parameters to be changed without modifying the program logic.
 
 It also provides a clear record of the settings used for each calculation.
 
 When a run is saved, a copy of its configuration file is stored together with the numerical data.
 
-Therefore, changing the main configuration files later does not remove the information required to understand an older saved run.
+Changing the main files in `configs/` later therefore does not remove the information required to reproduce or interpret an older saved run.
+
+## Lightweight default configurations
+
+The configuration files distributed in `configs/` are intentionally small enough to make new simulations reasonably fast.
+
+Their purpose is to provide a quick way to verify that the complete simulation workflow works correctly on another machine.
+
+The representative results distributed with the repository can be loaded directly from `results/` and may have been generated using larger or longer simulations.
+
+Users interested in higher numerical accuracy can increase the simulation parameters in the TOML files.
 
 ## Explicit random seeds
 
 Every simulation uses an explicit random seed.
 
-This allows simulations to be reproduced exactly.
+This allows simulations to be reproduced.
 
 For temperature sweeps, the value specified in the configuration is used as a base seed.
 
@@ -756,7 +825,7 @@ In zero external magnetic field, the positive- and negative-magnetization ordere
 
 A finite system may fluctuate between these sectors.
 
-If the signed magnetization were averaged directly, positive and negative values could cancel even though the system is magnetically ordered.
+If signed magnetization were averaged directly, positive and negative values could cancel even though the system is magnetically ordered.
 
 Using the absolute value provides a more useful finite-system measure of magnetic order.
 
@@ -772,7 +841,7 @@ A complete energy time series is not currently measured.
 
 For this reason, the energy plot does not include a statistical error estimate.
 
-For the same reason, fluctuation-based observables such as the heat capacity are not included in the current implementation.
+For the same reason, fluctuation-based observables such as heat capacity are not included in the current implementation.
 
 A statistically meaningful heat-capacity calculation would require repeated measurements of both energy and energy squared during the equilibrium measurement phase.
 
@@ -794,8 +863,14 @@ This makes the distinction between simulation data and exact theory visually cle
 │   ├── single_run_parameters.toml
 │   └── multi_run_parameters.toml
 ├── figures/
-│   ├── single_magnetization.png
-│   ├── single_final_lattice.png
+│   ├── single_final_Lattice_T_1p0.png
+│   ├── single_final_Lattice_T_2p269.png
+│   ├── single_final_Lattice_T_4.png
+│   ├── single_final_Lattice_T_8.png
+│   ├── single_magn_T_1p0.png
+│   ├── single_magn_T_2p269.png
+│   ├── single_magn_T_4.png
+│   ├── single_magn_T_8.png
 │   ├── magnetization_vs_temperature.png
 │   └── energy_vs_temperature.png
 ├── results/
@@ -816,12 +891,12 @@ The main responsibilities of the files are:
 - `analysis.py` — statistical and physical analysis
 - `plotter.py` — plotting functions
 - `storage.py` — saving and loading simulation results
-- `launch_single_sim.py` — run a single-temperature simulation
-- `launch_multi_sim.py` — run a temperature sweep
+- `launch_single_sim.py` — run a new single-temperature simulation
+- `launch_multi_sim.py` — run a new temperature sweep
 - `plot_single_sim.py` — reload and plot a saved single simulation
 - `analyze_multi_sim.py` — reload, analyze and plot a saved temperature sweep
 - `test_simulation.py` — automated test suite
-- `configs/` — user-editable simulation parameters
+- `configs/` — user-editable lightweight simulation configurations
 - `figures/` — selected figures displayed in this README
 - `results/` — saved numerical simulation results
 
@@ -851,9 +926,11 @@ parameters.toml
 
 This makes the saved run self-contained with respect to its simulation parameters.
 
-The `results/` directory is normally ignored by Git so that exploratory simulations are not accidentally committed.
+Representative saved results are included in the repository so that plotting and analysis can be run immediately without first generating new Monte Carlo data.
 
-Selected representative results can still be explicitly added to the repository when they are intended to document the project.
+The general `results/` directory is otherwise ignored by Git so that exploratory simulations are not accidentally committed.
+
+Selected results can still be explicitly added when they are intended to document the project.
 
 ---
 

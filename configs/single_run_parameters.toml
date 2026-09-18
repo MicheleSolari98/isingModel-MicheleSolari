@@ -1,12 +1,12 @@
 [physics]
-lattice_size = 30
+lattice_size = 40
 coupling = 1.0
-temperature = 1.2
+temperature = 8.0
 
 [simulation]
 equilibration_cycles = 600
 measurement_cycles = 600
-seed = 24
+seed = 54
 
 [output]
 record_time_series = true
