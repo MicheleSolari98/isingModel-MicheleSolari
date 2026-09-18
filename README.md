@@ -17,6 +17,44 @@ The project supports both single-temperature simulations and temperature sweeps,
 - Reproducible simulations through explicit random seeds
 - Automated tests with `pytest`
 
+
+## Contents
+
+- [Physical model](#physical-model)
+  - [Metropolis dynamics](#metropolis-dynamics)
+- [Results](#results)
+  - [Single-temperature simulations](#single-temperature-simulations)
+  - [Temperature sweep](#temperature-sweep)
+- [Using the code](#using-the-code)
+  - [Using saved single-run results](#using-saved-single-run-results)
+  - [Running a new single-temperature simulation](#running-a-new-single-temperature-simulation)
+  - [Using saved temperature-sweep results](#using-saved-temperature-sweep-results)
+  - [Running a new temperature sweep](#running-a-new-temperature-sweep)
+- [How the code works](#how-the-code-works)
+  - [Simulation engine](#simulation-engine)
+  - [Single-run workflow](#single-run-workflow)
+  - [Multi-run workflow](#multi-run-workflow)
+  - [Analysis](#analysis)
+  - [Plotting](#plotting)
+  - [Storage](#storage)
+- [Design choices](#design-choices)
+  - [Separation between simulation, analysis and plotting](#separation-between-simulation-analysis-and-plotting)
+  - [External configuration files](#external-configuration-files)
+  - [Lightweight default configurations](#lightweight-default-configurations)
+  - [Explicit random seeds](#explicit-random-seeds)
+  - [Independent temperature simulations](#independent-temperature-simulations)
+  - [Ordered initial state for temperature sweeps](#ordered-initial-state-for-temperature-sweeps)
+  - [Independent repetitions](#independent-repetitions)
+  - [Magnetization sampling](#magnetization-sampling)
+  - [Absolute magnetization](#absolute-magnetization)
+  - [Energy from final configurations](#energy-from-final-configurations)
+  - [Continuous theoretical curves](#continuous-theoretical-curves)
+- [Project structure](#project-structure)
+- [Saved results and reproducibility](#saved-results-and-reproducibility)
+- [Tests](#tests)
+- [Requirements](#requirements)
+
+
 ---
 
 # Physical model
