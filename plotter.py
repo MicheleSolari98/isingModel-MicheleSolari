@@ -93,3 +93,28 @@ def plot_energy_vs_temperature(
     plt.show()
     
     
+    
+def plot_connected_correlation_vs_temperature(
+    temperatures,
+    connected_correlation,
+    distance,
+):
+    """Plot connected spin correlation versus temperature."""
+    plt.plot(
+        temperatures,
+        connected_correlation,
+        "o-",
+    )
+
+    plt.xlabel("Temperature")
+
+    plt.ylabel(
+        rf"$C_{{\mathrm{{conn}}}}(d={distance})$"
+    )
+
+    plt.title(
+        "Connected spin correlation "
+        f"at distance d = {distance}"
+    )
+
+    plt.show()

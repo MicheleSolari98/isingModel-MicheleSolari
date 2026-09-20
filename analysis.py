@@ -280,3 +280,73 @@ def onsager_energy(temperatures, coupling):
     )
 
     return energy
+
+
+def connected_correlation_at_distance(
+    lattice,
+    distance,
+):
+    """Calculate the connected spin correlation at a fixed distance."""
+    magnetization = np.mean(lattice)
+
+    horizontal_correlation = np.mean(
+        lattice
+        * np.roll(
+            lattice,
+            -distance,
+            axis=1,
+        )
+    )
+
+    vertical_correlation = np.mean(
+        lattice
+        * np.roll(
+            lattice,
+            -distance,
+            axis=0,
+        )
+    )
+
+    correlation = (
+        horizontal_correlation
+        + vertical_correlation
+    ) / 2
+
+    return (
+        correlation
+        - magnetization**2
+    )
+
+def mean_connected_correlation(
+    final_lattices,
+    distance,
+):
+    """Calculate mean connected correlation for each temperature."""
+    number_of_temperatures = (
+        final_lattices.shape[0]
+    )
+
+    repetitions = (
+        final_lattices.shape[1]
+    )
+
+    correlations = np.empty(
+        (
+            number_of_temperatures,
+            repetitions,
+        )
+    )
+
+    for i in range(number_of_temperatures):
+        for j in range(repetitions):
+            correlations[i, j] = (
+                connected_correlation_at_distance(
+                    final_lattices[i, j],
+                    distance,
+                )
+            )
+
+    return np.mean(
+        correlations,
+        axis=1,
+    )

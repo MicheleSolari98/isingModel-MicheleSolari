@@ -12,6 +12,7 @@ The project supports both single-temperature simulations and temperature sweeps,
 - Temperature sweeps with independent repetitions
 - Magnetization measurements and statistical uncertainties
 - Energy calculated from final configurations
+- Connected spin correlations calculated from final configurations
 - Comparison with exact thermodynamic-limit results
 - Saving and reloading simulation results
 - Reproducible simulations through explicit random seeds
@@ -241,6 +242,8 @@ where the spontaneous magnetization is zero at and above the critical temperatur
 
 Finite-size effects are particularly visible close to the phase transition, where the correlation length becomes large compared with the lattice size.
 
+The large correlation length near the critical temperature also contributes to the larger error bars observed in this region. As fluctuations become correlated over longer spatial and temporal scales, the system becomes more sensitive to random fluctuations. This increases both the variance within a single Monte Carlo trajectory and the variation between independent runs with different random seeds.
+
 The energy per site is also calculated from the final configurations and compared with the exact thermodynamic-limit result.
 
 ![Energy versus temperature](figures/energy_vs_temperature.png)
@@ -249,6 +252,84 @@ In the current implementation, energy is evaluated only from the final configura
 
 The values obtained from the independent repetitions are averaged at each temperature, but no statistical error bar is reported because a complete energy time series is not measured.
 
+
+
+The final lattice configurations can also be used to study spatial correlations between spins.
+
+The ordinary spin correlation at distance `r` is
+
+```math
+C(r) =
+\langle s_i s_{i+r} \rangle.
+```
+
+However, below the critical temperature this quantity also contains the contribution of the average magnetic order.
+
+To isolate correlations between fluctuations around the average state, the connected correlation function is used:
+
+```math
+C_{\mathrm{conn}}(r)
+=
+\langle s_i s_{i+r} \rangle
+-
+\langle s_i \rangle
+\langle s_{i+r} \rangle.
+```
+
+For a translationally invariant system,
+
+```math
+\langle s_i \rangle
+=
+\langle s_{i+r} \rangle
+=
+m,
+```
+
+so that
+
+```math
+C_{\mathrm{conn}}(r)
+=
+C(r)-m^2.
+```
+
+Away from the critical point, the connected correlation approximately decays over a characteristic correlation length `\xi`:
+
+```math
+C_{\mathrm{conn}}(r)
+\sim
+e^{-r/\xi}.
+```
+
+The correlation length therefore represents the typical spatial size over which fluctuations remain correlated.
+
+Rather than attempting to extract a full correlation length from the limited number of final configurations, the analysis evaluates the connected correlation at a single fixed distance.
+
+The chosen distance is approximately one tenth of the lattice size:
+
+```math
+r =
+\left\lfloor
+\frac{L}{10}
+\right\rfloor,
+```
+
+with a minimum value of one lattice site.
+
+For example, for a lattice with `L = 40`, the correlation is evaluated at `r = 4`.
+
+This provides a simple qualitative measure of how strongly fluctuations remain correlated over a mesoscopic distance.
+
+![Connected correlation versus temperature](figures/correlation_vs_temperature.png)
+
+At low temperature, the system is strongly ordered and fluctuations around the ordered state are relatively small, so the connected correlation at the chosen distance is also small.
+
+Close to the critical temperature, fluctuations become correlated over increasingly large spatial scales. The connected correlation at fixed distance therefore becomes much larger.
+
+Above the transition, the correlation length becomes finite again and decreases as the temperature increases. The connected correlation at the chosen distance therefore tends back toward zero.
+
+For a finite lattice and a finite number of sampled final configurations, the measured value does not need to reach exactly zero. Finite-size effects and the limited number of statistically independent configurations produce residual fluctuations in the estimated correlation. In addition, just above the critical temperature the correlation length can still be comparable to the chosen observation distance, so a non-zero connected correlation is physically expected.
 ---
 
 # Using the code
@@ -825,23 +906,13 @@ The final lattice obtained at one temperature is not used as the initial configu
 
 This avoids introducing a dependence on the direction in which the temperature sweep is performed.
 
-## Ordered initial state for temperature sweeps
-
-Local Metropolis dynamics can become trapped for long times in metastable domain configurations at low temperature when starting from a completely random lattice.
-
-This can produce large deviations from equilibrium, particularly when large domains are separated by domain walls that are slow to disappear.
-
-For the temperature-sweep simulations, an ordered initial configuration is therefore used to reduce this low-temperature metastability.
-
-The simulations at different temperatures and repetitions remain independent.
-
 ## Independent repetitions
 
 Several independent simulations are performed at each temperature.
 
 This provides information that cannot be obtained from a single Monte Carlo trajectory alone.
 
-In particular, the statistical treatment can include both fluctuations within one trajectory and variations between independent repetitions.
+In particular, the statistical treatment can include both fluctuations within one trajectory and variations between independent repetitions. This allows to reduce the effect of "unlucky" seeds, and can show that the system is more sensitive to random fluctuations near the phase transition (see the error bar in the magnetization vs. temperature plot).
 
 ## Magnetization sampling
 

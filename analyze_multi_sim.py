@@ -17,8 +17,15 @@ from analysis import (
     onsager_magnetization,
     mean_final_energy,
     onsager_energy,
+    mean_connected_correlation,
 )
-from plotter import (plot_magnetization_vs_temperature, plot_energy_vs_temperature)
+
+from plotter import (
+    plot_magnetization_vs_temperature, 
+    plot_energy_vs_temperature,
+    plot_connected_correlation_vs_temperature
+)
+
 from storage import load_multi_run
 
 
@@ -49,6 +56,15 @@ def analyze_and_plot_multi_run(results, config):
     
     final_lattices = results["final_lattices"]
     coupling = config["physics"]["coupling"]
+    # Distance used for the connected-correlation plot
+    correlation_distance_divisor = 10
+
+    lattice_size = final_lattices.shape[-1]
+
+    correlation_distance = max(
+    1,
+    lattice_size // correlation_distance_divisor,
+    )
 
     (
         mean_magnetization,
@@ -113,7 +129,18 @@ def analyze_and_plot_multi_run(results, config):
         theoretical_temperatures,
         theoretical_energy,
     )
+    
+    # Connected spin correlation
+    mean_correlation = mean_connected_correlation(
+        final_lattices,
+        distance=correlation_distance,
+    )
 
+    plot_connected_correlation_vs_temperature(
+        temperatures,
+        mean_correlation,
+        correlation_distance,
+    )
 
 
 
