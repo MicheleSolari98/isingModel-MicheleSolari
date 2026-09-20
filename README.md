@@ -329,7 +329,6 @@ Close to the critical temperature, fluctuations become correlated over increasin
 
 Above the transition, the correlation length becomes finite again and decreases as the temperature increases. The connected correlation at the chosen distance therefore tends back toward zero.
 
-For a finite lattice and a finite number of sampled final configurations, the measured value does not need to reach exactly zero. Finite-size effects and the limited number of statistically independent configurations produce residual fluctuations in the estimated correlation. In addition, just above the critical temperature the correlation length can still be comparable to the chosen observation distance, so a non-zero connected correlation is physically expected.
 ---
 
 # Using the code
