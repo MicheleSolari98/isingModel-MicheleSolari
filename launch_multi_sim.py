@@ -56,8 +56,9 @@ def validate_multi_config(config):
     if (
         not isinstance(coupling, (int, float))
         or isinstance(coupling, bool)
+        or coupling <= 0
     ):
-        raise ValueError("coupling must be a number")
+        raise ValueError("coupling must be a positive number")
 
     if (
         type(equilibration_cycles) is not int
@@ -117,11 +118,6 @@ def validate_multi_config(config):
     if type(include_critical_temperature) is not bool:
         raise ValueError(
             "include_critical_temperature must be a boolean"
-        )
-
-    if include_critical_temperature and coupling == 0:
-        raise ValueError(
-            "critical temperature requires non-zero coupling"
         )
 
     if type(record_time_series) is not bool:

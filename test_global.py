@@ -149,6 +149,7 @@ def test_validate_single_config_rejects_invalid_parameters():
             "output": {
                 "record_time_series": True,
                 "sample_every": 1,
+                "save_results": True,
             },
         },
         {
@@ -175,25 +176,86 @@ def test_validate_single_config_rejects_invalid_parameters():
             validate_single_config(config)
 
 
+def test_validate_multi_config_rejects_invalid_parameters():
+    """Invalid multi-run parameters should raise a ValueError."""
+    invalid_configs = [
+        {
+            "physics": {
+                "lattice_size": 4,
+                "coupling": 1.0,
+            },
+            "simulation": {
+                "equilibration_cycles": 10,
+                "measurement_cycles": 10,
+                "measurement_every": 20,
+                "seed": 42,
+                "repetitions": 2,
+            },
+            "temperature_sweep": {
+                "start": 1.0,
+                "stop": 3.0,
+                "points": 3,
+                "include_critical_temperature": True,
+            },
+            "output": {
+                "record_time_series": False,
+                "sample_every": 1,
+                "save_results": False,
+            },
+        },
+        {
+            "physics": {
+                "lattice_size": 4,
+                "coupling": 1.0,
+            },
+            "simulation": {
+                "equilibration_cycles": 10,
+                "measurement_cycles": 10,
+                "measurement_every": 5,
+                "seed": 42,
+                "repetitions": 0,
+            },
+            "temperature_sweep": {
+                "start": 1.0,
+                "stop": 3.0,
+                "points": 3,
+                "include_critical_temperature": True,
+            },
+            "output": {
+                "record_time_series": False,
+                "sample_every": 1,
+                "save_results": False,
+            },
+        },
+        {
+            "physics": {
+                "lattice_size": 4,
+                "coupling": 1.0,
+            },
+            "simulation": {
+                "equilibration_cycles": 10,
+                "measurement_cycles": 10,
+                "measurement_every": 5,
+                "seed": 42,
+                "repetitions": 2,
+            },
+            "temperature_sweep": {
+                "start": 3.0,
+                "stop": 1.0,
+                "points": 3,
+                "include_critical_temperature": True,
+            },
+            "output": {
+                "record_time_series": False,
+                "sample_every": 1,
+                "save_results": False,
+            },
+        },
+    ]
 
-def test_simulation_sampling_cycles():
-    """Time-series samples should be recorded at the requested cycle interval."""
-    rng = np.random.default_rng(42)
-    lattice = create_lattice(4, rng)
-
-    final_lattice, sampled_cycles, magnetization_history, magnetization_measurements = run_simulation(
-        lattice=lattice,
-        temperature=2.0,
-        coupling=1.0,
-        equilibration_cycles=2,
-        measurement_cycles=3,
-        rng=rng,
-        record_time_series=True,
-        sample_every=2,
-    )
-
-    assert np.array_equal(sampled_cycles, [0, 2, 4])
-    assert len(magnetization_history) == len(sampled_cycles)
+    for config in invalid_configs:
+        with pytest.raises(ValueError):
+            validate_multi_config(config)
 
 
 
@@ -235,10 +297,13 @@ def test_simulation_is_reproducible():
     
     
     
-def test_measurement_sampling():
-    """Magnetization should be sampled only at the requested measurement interval."""
+def test_simulation_sampling():
+    """Time-series and statistical measurements should follow their intervals."""
     rng = np.random.default_rng(42)
-    lattice = create_lattice(4, rng)
+    lattice = create_lattice(
+        4,
+        rng,
+    )
 
     (
         final_lattice,
@@ -250,15 +315,25 @@ def test_measurement_sampling():
         temperature=2.0,
         coupling=1.0,
         equilibration_cycles=2,
-        measurement_cycles=10,
+        measurement_cycles=4,
         rng=rng,
-        record_time_series=False,
-        sample_every=1,
+        record_time_series=True,
+        sample_every=2,
         measurement_every=2,
     )
 
-    assert len(magnetization_measurements) == 5
-    
+    assert np.array_equal(
+        sampled_cycles,
+        [0, 2, 4, 6],
+    )
+
+    assert len(
+        magnetization_history
+    ) == 4
+
+    assert len(
+        magnetization_measurements
+    ) == 2
     
     
 def test_temperature_grid_includes_critical_temperature():
@@ -513,5 +588,85 @@ def test_multi_run_storage(tmp_path):
     ).exists()
     
     
+def test_multi_run_workflow(tmp_path):
+    """A multi simulation should run, save, and load consistently."""
+    config = {
+        "physics": {
+            "lattice_size": 4,
+            "coupling": 1.0,
+        },
+        "simulation": {
+            "equilibration_cycles": 1,
+            "measurement_cycles": 4,
+            "measurement_every": 2,
+            "seed": 42,
+            "repetitions": 2,
+        },
+        "temperature_sweep": {
+            "start": 1.0,
+            "stop": 3.0,
+            "points": 3,
+            "include_critical_temperature": True,
+        },
+        "output": {
+            "record_time_series": False,
+            "sample_every": 1,
+            "save_results": True,
+        },
+    }
+
+    results = run_multi_simulation(config)
+
+    config_path = tmp_path / "parameters.toml"
+    config_path.write_text(
+        """
+[physics]
+lattice_size = 4
+coupling = 1.0
+"""
+    )
+
+    run_directory = save_multi_run(
+        results_directory=tmp_path / "results",
+        config_path=config_path,
+        results=results,
+    )
+
+    loaded_results = load_multi_run(
+        run_directory
+    )
+
+    assert loaded_results["magnetization"].shape == (
+        4,
+        2,
+        2,
+    )
+
+    assert loaded_results["final_lattices"].shape == (
+        4,
+        2,
+        4,
+        4,
+    )
+
+    assert np.array_equal(
+        loaded_results["temperatures"],
+        results["temperatures"],
+    )
+
+    assert np.array_equal(
+        loaded_results["seeds"],
+        results["seeds"],
+    )
+
+    assert np.array_equal(
+        loaded_results["magnetization"],
+        results["magnetization"],
+    )
+
+    assert np.array_equal(
+        loaded_results["final_lattices"],
+        results["final_lattices"],
+    )
     
     
