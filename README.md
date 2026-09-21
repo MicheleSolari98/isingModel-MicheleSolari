@@ -990,7 +990,7 @@ This makes the distinction between simulation data and exact theory visually cle
 ├── plot_single_sim.py
 ├── plotter.py
 ├── storage.py
-└── test_simulation.py
+└── test_global.py
 ```
 
 The main responsibilities of the files are:
@@ -1003,7 +1003,7 @@ The main responsibilities of the files are:
 - `launch_multi_sim.py` — run a new temperature sweep
 - `plot_single_sim.py` — reload and plot a saved single simulation
 - `analyze_multi_sim.py` — reload, analyze and plot a saved temperature sweep
-- `test_simulation.py` — automated test suite
+- `test_global.py` — automated test suite
 - `configs/` — user-editable lightweight simulation configurations
 - `figures/` — selected figures displayed in this README
 - `results/` — saved numerical simulation results
@@ -1044,25 +1044,42 @@ Selected results can still be explicitly added when they are intended to documen
 
 # Tests
 
-The automated test suite can be run from the repository root with
+The automated test suite is contained in
+
+```text
+test_global.py
+```
+
+and can be run from the repository root with
 
 ```bash
 python -m pytest -v
 ```
 
-The tests cover the main components of the project, including:
+The test suite covers the main numerical components of the project and verifies that the most important parts of the workflow interact correctly.
 
-- lattice generation;
-- magnetization calculation;
+The tests include:
+
+- generation of valid Ising lattices;
+- magnetization for configurations with known results;
 - spin-flip energy differences;
-- simulation sampling;
+- loading of TOML configuration files;
+- validation of invalid single-run configurations;
+- validation of invalid multi-run configurations;
 - reproducibility with fixed random seeds;
-- configuration validation;
-- temperature-grid generation;
-- multi-run output shapes;
-- exact theoretical functions;
-- statistical analysis;
-- saving and loading simulation results.
+- correct time-series and statistical-measurement sampling;
+- inclusion of the exact critical temperature in the temperature grid;
+- expected shapes of the raw multi-run output;
+- behavior of the exact Onsager magnetization;
+- contribution of independent-run dispersion to the statistical uncertainty;
+- saving and loading of single-run results;
+- saving and loading of multi-run results.
+
+In addition to these focused tests, the suite contains a multi-run workflow test.
+
+This test performs a small temperature sweep, saves the generated raw results, loads them again, and verifies that the stored temperatures, seeds, magnetization measurements and final lattice configurations remain unchanged.
+
+The combination of focused tests and the workflow test checks both individual numerical components and their integration without requiring computationally expensive simulations.
 
 ---
 
